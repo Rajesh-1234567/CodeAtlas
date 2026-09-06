@@ -50,3 +50,52 @@ The graph isn't just a visualization — it is part of the underlying codebase i
 🚧 **Early development**
 
 More features and implementation details coming soon.
+## Day 4 — Relationship Resolver & Code Graph
+
+CodeAtlas now builds a graph representing relationships between entities in a repository.
+
+### Graph Node Types
+
+- FILE
+- CLASS
+- FUNCTION
+- METHOD
+- EXTERNAL
+
+### Relationship Types
+
+- CONTAINS
+- INHERITS
+- CALLS
+- IMPORTS
+
+### Graph API
+
+Get the complete graph:
+
+`GET /repositories/{repository_id}/graph?filter=ALL`
+
+Supported filters:
+
+- ALL
+- CLASS
+- FUNCTION
+- CALLS
+- IMPORTS
+
+### Graph Features
+
+- Deterministic node IDs
+- File → class/function relationships
+- Class inheritance relationships
+- Function and method call relationships
+- Import relationships
+- External nodes for unresolved calls/imports
+- Graph statistics
+- Graph filtering
+
+### Testing
+
+Day 4 graph and parser tests:
+
+`14 passed`
