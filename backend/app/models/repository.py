@@ -48,12 +48,14 @@ class RepositoryResponse(BaseModel):
     Response model for repository analysis.
 
     Contains:
+    - Repository ID
     - Repository metadata
     - File statistics
     - Programming language breakdown
     - Parsed code structure
     """
 
+    repository_id: str
     name: str
     url: str
     total_files: int

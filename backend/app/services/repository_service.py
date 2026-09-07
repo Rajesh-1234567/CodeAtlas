@@ -9,6 +9,8 @@ from git.exc import GitCommandError
 from app.models.repository import RepositoryResponse
 from app.utils.file_scanner import FileScanner
 from app.services.parser_service import ParserService
+from app.graph.graph_service import GraphService
+from app.graph.models import CodeGraph
 
 
 class RepositoryNotFoundError(Exception):
@@ -27,6 +29,12 @@ class RepositoryService:
 
         self.file_scanner = FileScanner()
         self.parser_service = ParserService()
+        self.graph_service = GraphService()
+
+        # Store generated graphs in memory.
+        # Key = repository ID
+        # Value = CodeGraph
+        self.graphs: dict[str, CodeGraph] = {}
 
     def analyze(self, url: str) -> RepositoryResponse:
         """
@@ -38,8 +46,10 @@ class RepositoryService:
         3. Clone repository
         4. Scan repository
         5. Parse Python files
-        6. Build response
-        7. Cleanup temporary directory
+        6. Build code graph
+        7. Store graph
+        8. Build response
+        9. Cleanup temporary directory
         """
 
         url = str(url)
@@ -47,6 +57,9 @@ class RepositoryService:
         repo_name = self._extract_repo_name(url)
 
         local_path = self._generate_temp_path(repo_name)
+
+        # Generate a unique ID for this analysis
+        repository_id = str(uuid.uuid4())
 
         try:
             # Step 1: Clone repository
@@ -65,21 +78,43 @@ class RepositoryService:
                 local_path
             )
 
-            # Step 4: Build final response
-            response = RepositoryResponse(
-                name=repo_name,
-                url=url,
-                total_files=scan_result.total_files,
-                source_files=scan_result.source_files,
-                languages=scan_result.languages,
+            # Step 4: Build code graph
+            code_graph = self.graph_service.build_graph(
+                repository_root=local_path,
                 code_structure=code_structure
             )
+
+            # Step 5: Store graph in memory
+            self.graphs[repository_id] = code_graph
+
+            # Step 6: Build final response
+            response = RepositoryResponse(
+    repository_id=repository_id,
+    name=repo_name,
+    url=url,
+    total_files=scan_result.total_files,
+    source_files=scan_result.source_files,
+    languages=scan_result.languages,
+    code_structure=code_structure
+)
 
             return response
 
         finally:
             # Always remove temporary repository
             self._cleanup(local_path)
+
+    def get_graph(self, repository_id: str) -> CodeGraph:
+        """
+        Get a previously generated code graph.
+        """
+
+        if repository_id not in self.graphs:
+            raise RepositoryNotFoundError(
+                f"Repository graph not found: {repository_id}"
+            )
+
+        return self.graphs[repository_id]
 
     def _extract_repo_name(self, url: str) -> str:
         """
