@@ -3,8 +3,7 @@ from pathlib import Path
 from app.graph.graph_service import GraphService
 from app.services.parser_service import ParserService
 
-
-FIXTURE_PATH = Path("tests/fixtures/graph_project")
+FIXTURE_PATH = Path("backend\\tests\\fixtures\\graph_project")
 
 
 def build_test_graph():
