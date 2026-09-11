@@ -6,6 +6,7 @@ from app.services.repository_service import (
     RepositoryNotFoundError,
 )
 
+
 app = FastAPI(
     title="CodeAtlas API",
     description="AI-powered codebase intelligence platform",
@@ -137,4 +138,165 @@ async def get_repository_graph(
         raise HTTPException(
             status_code=500,
             detail=f"Internal server error: {str(e)}"
+        )
+
+
+# ---------------------------------------------------------
+# Graph Analysis Endpoints
+# ---------------------------------------------------------
+
+
+@app.get(
+    "/repositories/{repository_id}/dependencies"
+)
+def get_dependencies(
+    repository_id: str,
+    node_id: str
+):
+    """
+    Get direct dependencies of a node.
+
+    Example:
+    /repositories/{repository_id}/dependencies?node_id=file:backend/app/main.py
+    """
+
+    try:
+        return repository_service.get_dependencies(
+            repository_id,
+            node_id
+        )
+
+    except RepositoryNotFoundError as e:
+        raise HTTPException(
+            status_code=404,
+            detail=str(e)
+        )
+
+
+@app.get(
+    "/repositories/{repository_id}/dependents"
+)
+def get_dependents(
+    repository_id: str,
+    node_id: str
+):
+    """
+    Get nodes that directly depend on the given node.
+
+    Example:
+    /repositories/{repository_id}/dependents?node_id=file:backend/app/main.py
+    """
+
+    try:
+        return repository_service.get_dependents(
+            repository_id,
+            node_id
+        )
+
+    except RepositoryNotFoundError as e:
+        raise HTTPException(
+            status_code=404,
+            detail=str(e)
+        )
+
+
+@app.get(
+    "/repositories/{repository_id}/dependencies/traverse"
+)
+def traverse_dependencies(
+    repository_id: str,
+    node_id: str,
+    depth: int = 1
+):
+    """
+    Traverse dependencies up to a given depth.
+
+    Example:
+    /repositories/{repository_id}/dependencies/traverse?node_id=file:backend/app/main.py&depth=2
+    """
+
+    try:
+        return repository_service.traverse_dependencies(
+            repository_id,
+            node_id,
+            depth
+        )
+
+    except RepositoryNotFoundError as e:
+        raise HTTPException(
+            status_code=404,
+            detail=str(e)
+        )
+
+
+@app.get(
+    "/repositories/{repository_id}/path"
+)
+def shortest_path(
+    repository_id: str,
+    from_node: str,
+    to_node: str
+):
+    """
+    Find the shortest dependency path between two nodes.
+
+    Example:
+    /repositories/{repository_id}/path?from_node=...&to_node=...
+    """
+
+    try:
+        return repository_service.shortest_path(
+            repository_id,
+            from_node,
+            to_node
+        )
+
+    except RepositoryNotFoundError as e:
+        raise HTTPException(
+            status_code=404,
+            detail=str(e)
+        )
+
+
+@app.get(
+    "/repositories/{repository_id}/cycles"
+)
+def find_cycles(
+    repository_id: str
+):
+    """
+    Find dependency cycles in the repository graph.
+    """
+
+    try:
+        return repository_service.find_cycles(
+            repository_id
+        )
+
+    except RepositoryNotFoundError as e:
+        raise HTTPException(
+            status_code=404,
+            detail=str(e)
+        )
+
+
+@app.get(
+    "/repositories/{repository_id}/graph/stats"
+)
+def get_graph_statistics(
+    repository_id: str
+):
+    """
+    Return statistics about the repository code graph.
+    """
+
+    try:
+        return repository_service.get_graph_statistics(
+            repository_id
+        )
+
+    except RepositoryNotFoundError as e:
+        raise HTTPException(
+            status_code=404,
+            detail=str(e)
         )

@@ -6,6 +6,7 @@ import tempfile
 from git import Repo
 from git.exc import GitCommandError
 
+from app.graph.graph_analyzer import GraphAnalyzer
 from app.models.repository import RepositoryResponse
 from app.utils.file_scanner import FileScanner
 from app.services.parser_service import ParserService
@@ -89,14 +90,14 @@ class RepositoryService:
 
             # Step 6: Build final response
             response = RepositoryResponse(
-    repository_id=repository_id,
-    name=repo_name,
-    url=url,
-    total_files=scan_result.total_files,
-    source_files=scan_result.source_files,
-    languages=scan_result.languages,
-    code_structure=code_structure
-)
+                repository_id=repository_id,
+                name=repo_name,
+                url=url,
+                total_files=scan_result.total_files,
+                source_files=scan_result.source_files,
+                languages=scan_result.languages,
+                code_structure=code_structure
+            )
 
             return response
 
@@ -104,7 +105,14 @@ class RepositoryService:
             # Always remove temporary repository
             self._cleanup(local_path)
 
-    def get_graph(self, repository_id: str) -> CodeGraph:
+    # =========================================================
+    # Graph
+    # =========================================================
+
+    def get_graph(
+        self,
+        repository_id: str
+    ) -> CodeGraph:
         """
         Get a previously generated code graph.
         """
@@ -116,7 +124,115 @@ class RepositoryService:
 
         return self.graphs[repository_id]
 
-    def _extract_repo_name(self, url: str) -> str:
+    # =========================================================
+    # Graph Analysis
+    # =========================================================
+
+    def get_dependencies(
+        self,
+        repository_id: str,
+        node_id: str
+    ):
+        """
+        Get direct dependencies of a node.
+        """
+
+        graph = self.get_graph(repository_id)
+
+        analyzer = GraphAnalyzer(graph)
+
+        return analyzer.get_dependencies(node_id)
+
+    def get_dependents(
+        self,
+        repository_id: str,
+        node_id: str
+    ):
+        """
+        Get direct dependents of a node.
+        """
+
+        graph = self.get_graph(repository_id)
+
+        analyzer = GraphAnalyzer(graph)
+
+        return analyzer.get_dependents(node_id)
+
+    def traverse_dependencies(
+        self,
+        repository_id: str,
+        node_id: str,
+        depth: int = 1
+    ):
+        """
+        Traverse dependencies up to the given depth.
+        """
+
+        graph = self.get_graph(repository_id)
+
+        analyzer = GraphAnalyzer(graph)
+
+        return analyzer.traverse_dependencies(
+            node_id,
+            depth
+        )
+
+    def shortest_path(
+        self,
+        repository_id: str,
+        from_node: str,
+        to_node: str
+    ):
+        """
+        Find the shortest dependency path
+        between two nodes.
+        """
+
+        graph = self.get_graph(repository_id)
+
+        analyzer = GraphAnalyzer(graph)
+
+        return analyzer.shortest_path(
+            from_node,
+            to_node
+        )
+
+    def find_cycles(
+        self,
+        repository_id: str
+    ):
+        """
+        Find all dependency cycles in the graph.
+        """
+
+        graph = self.get_graph(repository_id)
+
+        analyzer = GraphAnalyzer(graph)
+
+        return analyzer.find_cycles()
+
+    def get_graph_statistics(
+        self,
+        repository_id: str
+    ):
+        """
+        Get statistics about the code graph.
+        """
+
+        graph = self.get_graph(repository_id)
+
+        analyzer = GraphAnalyzer(graph)
+
+        return analyzer.get_statistics()
+
+    # =========================================================
+    # Repository Helpers
+    # =========================================================
+
+    def _extract_repo_name(
+        self,
+        url: str
+    ) -> str:
         """
         Extract repository name from GitHub URL.
 
@@ -131,7 +247,10 @@ class RepositoryService:
 
         return repo_name
 
-    def _generate_temp_path(self, repo_name: str) -> str:
+    def _generate_temp_path(
+        self,
+        repo_name: str
+    ) -> str:
         """
         Generate a unique temporary directory path.
         """
