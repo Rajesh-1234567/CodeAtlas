@@ -300,3 +300,20 @@ def get_graph_statistics(
             status_code=404,
             detail=str(e)
         )
+@app.get("/repositories/{repository_id}/impact")
+def analyze_impact(
+    repository_id: str,
+    node_id: str,
+    depth: int = 3
+):
+    try:
+        return repository_service.analyze_impact(
+            repository_id,
+            node_id,
+            depth
+        )
+    except RepositoryNotFoundError as e:
+        raise HTTPException(
+            status_code=404,
+            detail=str(e)
+        )

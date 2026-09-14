@@ -6,6 +6,7 @@ import tempfile
 from git import Repo
 from git.exc import GitCommandError
 
+from app.analysis.impact_analyzer import ImpactAnalyzer
 from app.graph.graph_analyzer import GraphAnalyzer
 from app.models.repository import RepositoryResponse
 from app.utils.file_scanner import FileScanner
@@ -224,6 +225,75 @@ class RepositoryService:
         analyzer = GraphAnalyzer(graph)
 
         return analyzer.get_statistics()
+
+    # =========================================================
+    # Impact Analysis
+    # =========================================================
+
+    def get_impact(
+        self,
+        repository_id: str,
+        node_id: str,
+        depth: int = 1
+    ):
+        """
+        Get nodes affected by a changed node.
+        """
+
+        graph = self.get_graph(repository_id)
+
+        analyzer = ImpactAnalyzer(graph)
+
+        return analyzer.get_impact(
+            node_id,
+            depth
+        )
+
+    def get_impact_risk(
+        self,
+        repository_id: str,
+        node_id: str,
+        depth: int = 3
+    ):
+        """
+        Calculate the risk score for changing a node.
+        """
+
+        graph = self.get_graph(repository_id)
+
+        analyzer = ImpactAnalyzer(graph)
+
+        return analyzer.get_risk_score(
+            node_id,
+            depth
+        )
+
+    def analyze_impact(
+        self,
+        repository_id: str,
+        node_id: str,
+        depth: int = 3
+    ):
+        """
+        Perform complete impact analysis.
+
+        Returns:
+        - target node
+        - impacted nodes
+        - impact distance
+        - impact explanation
+        - risk score
+        - risk level
+        """
+
+        graph = self.get_graph(repository_id)
+
+        analyzer = ImpactAnalyzer(graph)
+
+        return analyzer.analyze(
+            node_id,
+            depth
+        )
 
     # =========================================================
     # Repository Helpers
