@@ -1,6 +1,10 @@
 from fastapi import FastAPI, HTTPException, Query
 
 from app.models.repository import RepositoryRequest, RepositoryResponse
+from app.models.search import (
+    SearchRequest,
+    SearchResultResponse,
+)
 from app.services.repository_service import (
     RepositoryService,
     RepositoryNotFoundError,
@@ -57,9 +61,11 @@ async def analyze(
     3. Scans files
     4. Detects programming languages
     5. Parses Python code structure
-    6. Builds the code graph
-    7. Stores the graph
-    8. Returns repository analysis
+    6. Creates code chunks
+    7. Builds semantic search index
+    8. Builds the code graph
+    9. Stores the graph and search index
+    10. Returns repository analysis
     """
 
     try:
@@ -80,6 +86,80 @@ async def analyze(
             status_code=500,
             detail=f"Internal server error: {str(e)}"
         )
+
+
+# ---------------------------------------------------------
+# Semantic Search Endpoint
+# ---------------------------------------------------------
+
+
+@app.post(
+    "/repositories/{repository_id}/search",
+    response_model=list[SearchResultResponse],
+    summary="Search repository code semantically",
+    tags=["search"]
+)
+async def search_repository(
+    repository_id: str,
+    request: SearchRequest
+):
+    """
+    Search an analyzed repository using semantic similarity.
+
+    Optional metadata filters:
+    - file
+    - symbol
+    - class_name
+    - language
+
+    Each result contains a graph node ID so that
+    search results can be connected to graph analysis.
+    """
+
+    try:
+        search_service = (
+            repository_service.get_search_service(
+                repository_id
+            )
+        )
+
+        results = search_service.search(
+            query=request.query,
+            top_k=request.top_k,
+            file=request.file,
+            symbol=request.symbol,
+            class_name=request.class_name,
+            language=request.language,
+        )
+
+        return [
+            SearchResultResponse(
+                file=result.chunk.file,
+                symbol=result.chunk.symbol,
+                start_line=result.chunk.start_line,
+                end_line=result.chunk.end_line,
+                score=result.score,
+                node_id=result.chunk.node_id,
+            )
+            for result in results
+        ]
+
+    except RepositoryNotFoundError as e:
+        raise HTTPException(
+            status_code=404,
+            detail=str(e)
+        )
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Internal server error: {str(e)}"
+        )
+
+
+# ---------------------------------------------------------
+# Graph Endpoint
+# ---------------------------------------------------------
 
 
 @app.get(
@@ -155,9 +235,6 @@ def get_dependencies(
 ):
     """
     Get direct dependencies of a node.
-
-    Example:
-    /repositories/{repository_id}/dependencies?node_id=file:backend/app/main.py
     """
 
     try:
@@ -182,9 +259,6 @@ def get_dependents(
 ):
     """
     Get nodes that directly depend on the given node.
-
-    Example:
-    /repositories/{repository_id}/dependents?node_id=file:backend/app/main.py
     """
 
     try:
@@ -209,10 +283,7 @@ def traverse_dependencies(
     depth: int = 1
 ):
     """
-    Traverse dependencies up to a given depth.
-
-    Example:
-    /repositories/{repository_id}/dependencies/traverse?node_id=file:backend/app/main.py&depth=2
+    Traverse dependencies up to the given depth.
     """
 
     try:
@@ -239,9 +310,6 @@ def shortest_path(
 ):
     """
     Find the shortest dependency path between two nodes.
-
-    Example:
-    /repositories/{repository_id}/path?from_node=...&to_node=...
     """
 
     try:
