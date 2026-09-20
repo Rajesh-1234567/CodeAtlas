@@ -14,6 +14,9 @@ from app.services.parser_service import ParserService
 from app.graph.graph_service import GraphService
 from app.graph.models import CodeGraph
 
+from app.indexing.code_chunker import CodeChunker
+from app.indexing.search_service import SearchService
+
 
 class RepositoryNotFoundError(Exception):
     """Raised when a repository cannot be cloned or analyzed."""
@@ -32,11 +35,17 @@ class RepositoryService:
         self.file_scanner = FileScanner()
         self.parser_service = ParserService()
         self.graph_service = GraphService()
+        self.code_chunker = CodeChunker()
 
         # Store generated graphs in memory.
         # Key = repository ID
         # Value = CodeGraph
         self.graphs: dict[str, CodeGraph] = {}
+
+        # Store semantic search indexes in memory.
+        # Key = repository ID
+        # Value = SearchService
+        self.search_indexes: dict[str, SearchService] = {}
 
     def analyze(self, url: str) -> RepositoryResponse:
         """
@@ -48,10 +57,12 @@ class RepositoryService:
         3. Clone repository
         4. Scan repository
         5. Parse Python files
-        6. Build code graph
-        7. Store graph
-        8. Build response
-        9. Cleanup temporary directory
+        6. Create code chunks
+        7. Build semantic search index
+        8. Build code graph
+        9. Store graph and search index
+        10. Build response
+        11. Cleanup temporary directory
         """
 
         url = str(url)
@@ -80,16 +91,32 @@ class RepositoryService:
                 local_path
             )
 
-            # Step 4: Build code graph
+            # Step 4: Create code chunks
+            chunks = self._chunk_repository(
+                code_structure
+            )
+
+            # Step 5: Build semantic search index
+            search_service = SearchService()
+
+            search_service.build_index(
+                chunks
+            )
+
+            self.search_indexes[repository_id] = (
+                search_service
+            )
+
+            # Step 6: Build code graph
             code_graph = self.graph_service.build_graph(
                 repository_root=local_path,
                 code_structure=code_structure
             )
 
-            # Step 5: Store graph in memory
+            # Step 7: Store graph in memory
             self.graphs[repository_id] = code_graph
 
-            # Step 6: Build final response
+            # Step 8: Build final response
             response = RepositoryResponse(
                 repository_id=repository_id,
                 name=repo_name,
@@ -105,6 +132,49 @@ class RepositoryService:
         finally:
             # Always remove temporary repository
             self._cleanup(local_path)
+
+    # =========================================================
+    # Semantic Search
+    # =========================================================
+
+    def get_search_service(
+        self,
+        repository_id: str
+    ) -> SearchService:
+        """
+        Get the semantic search service for a repository.
+        """
+
+        if repository_id not in self.search_indexes:
+            raise RepositoryNotFoundError(
+                f"Repository search index not found: "
+                f"{repository_id}"
+            )
+
+        return self.search_indexes[
+            repository_id
+        ]
+
+    def _chunk_repository(
+        self,
+        code_structure
+    ):
+        """
+        Convert all parsed repository files
+        into searchable code chunks.
+        """
+
+        all_chunks = []
+
+        for code_file in code_structure.files:
+
+            chunks = self.code_chunker.chunk_file(
+                code_file
+            )
+
+            all_chunks.extend(chunks)
+
+        return all_chunks
 
     # =========================================================
     # Graph
