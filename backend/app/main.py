@@ -5,6 +5,8 @@ from app.models.search import (
     SearchRequest,
     SearchResultResponse,
 )
+from app.models.chat import ChatRequest, ChatResponse
+from app.ai.chat_service import ChatService
 from app.services.repository_service import (
     RepositoryService,
     RepositoryNotFoundError,
@@ -20,6 +22,11 @@ app = FastAPI(
 
 # Initialize repository service
 repository_service = RepositoryService()
+
+# Initialize chat service
+chat_service = ChatService(
+    repository_service
+)
 
 
 @app.get("/")
@@ -368,20 +375,91 @@ def get_graph_statistics(
             status_code=404,
             detail=str(e)
         )
-@app.get("/repositories/{repository_id}/impact")
+
+
+# ---------------------------------------------------------
+# Impact Analysis Endpoint
+# ---------------------------------------------------------
+
+
+@app.get(
+    "/repositories/{repository_id}/impact"
+)
 def analyze_impact(
     repository_id: str,
     node_id: str,
     depth: int = 3
 ):
+    """
+    Analyze the impact of changing a repository node.
+    """
+
     try:
         return repository_service.analyze_impact(
             repository_id,
             node_id,
             depth
         )
+
     except RepositoryNotFoundError as e:
         raise HTTPException(
             status_code=404,
             detail=str(e)
+        )
+
+
+# ---------------------------------------------------------
+# AI Codebase Chat Endpoint
+# ---------------------------------------------------------
+
+
+@app.post(
+    "/repositories/{repository_id}/chat",
+    response_model=ChatResponse,
+    summary="Ask questions about a repository",
+    tags=["chat"]
+)
+async def chat_with_repository(
+    repository_id: str,
+    request: ChatRequest
+):
+    """
+    Ask a natural-language question about an analyzed repository.
+
+    The chat pipeline:
+    1. Retrieves relevant code using semantic search
+    2. Retrieves graph relationships
+    3. Builds repository context
+    4. Sends the context to the LLM
+    5. Returns a grounded answer with source citations
+    """
+
+    try:
+        return chat_service.chat(
+            repository_id,
+            request
+        )
+
+    except RepositoryNotFoundError as e:
+        raise HTTPException(
+            status_code=404,
+            detail=str(e)
+        )
+
+    except ValueError as e:
+        raise HTTPException(
+            status_code=400,
+            detail=str(e)
+        )
+
+    except RuntimeError as e:
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Internal server error: {str(e)}"
         )
