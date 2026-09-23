@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.models.repository import RepositoryRequest, RepositoryResponse
 from app.models.search import (
@@ -15,6 +16,22 @@ app = FastAPI(
     title="CodeAtlas API",
     description="AI-powered codebase intelligence platform",
     version="0.1.0"
+)
+
+
+# ---------------------------------------------------------
+# CORS Configuration
+# ---------------------------------------------------------
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -368,7 +385,11 @@ def get_graph_statistics(
             status_code=404,
             detail=str(e)
         )
-@app.get("/repositories/{repository_id}/impact")
+
+
+@app.get(
+    "/repositories/{repository_id}/impact"
+)
 def analyze_impact(
     repository_id: str,
     node_id: str,
@@ -380,6 +401,7 @@ def analyze_impact(
             node_id,
             depth
         )
+
     except RepositoryNotFoundError as e:
         raise HTTPException(
             status_code=404,

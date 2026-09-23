@@ -1,0 +1,307 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #f5f7fb;
+  color: #1f2937;
+}
+
+button,
+input {
+  font-family: inherit;
+}
+
+.app {
+  min-height: 100vh;
+}
+.dashboard {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-header {
+  height: 70px;
+  background: #111827;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+}
+
+.dashboard-header h1 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.dashboard-header span {
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.search-box {
+  display: flex;
+  gap: 8px;
+}
+
+.search-box input {
+  width: 300px;
+  padding: 9px 12px;
+  border: none;
+  border-radius: 5px;
+}
+
+.search-box button,
+.repository-bar button {
+  padding: 9px 14px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  background: #2563eb;
+  color: white;
+}
+
+.repository-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.repository-bar label {
+  font-weight: 600;
+}
+
+.repository-bar input {
+  width: 320px;
+  padding: 8px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 5px;
+}
+
+.dashboard-body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  min-height: 650px;
+}
+
+.sidebar {
+  background: white;
+  border-right: 1px solid #e5e7eb;
+  overflow-y: auto;
+}
+
+.sidebar h2 {
+  padding: 16px;
+  margin: 0;
+  font-size: 18px;
+}
+
+.sidebar-section {
+  border-top: 1px solid #e5e7eb;
+  padding: 12px;
+}
+
+.sidebar-section h3 {
+  margin-top: 0;
+  font-size: 14px;
+}
+
+.graph-panel {
+  background: #f8fafc;
+  min-width: 0;
+}
+
+.panel-header {
+  height: 55px;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+}
+
+.panel-header h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.legend {
+  display: flex;
+  gap: 8px;
+}
+
+.legend span {
+  font-size: 10px;
+  padding: 4px 7px;
+  border-radius: 4px;
+  background: #e5e7eb;
+}
+
+.architecture-graph {
+  width: 100%;
+  height: 595px;
+}
+
+.graph-message {
+  height: 595px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  font-size: 15px;
+}
+
+.graph-error {
+  color: #dc2626;
+}
+
+.details-panel {
+  display: grid;
+  grid-template-columns: 1fr 1fr 160px;
+  gap: 20px;
+  padding: 18px;
+  background: white;
+  border-top: 1px solid #e5e7eb;
+}
+
+.details-panel h2 {
+  margin-top: 0;
+  font-size: 16px;
+}
+
+.detail-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.detail-row strong {
+  min-width: 60px;
+}
+
+.muted-text {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.error-text {
+  color: #dc2626;
+  font-size: 13px;
+}
+
+.chat-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chat-placeholder button {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  background: #111827;
+  color: white;
+  cursor: pointer;
+}
+
+.code-section {
+  background: #111827;
+  color: white;
+  padding: 18px;
+}
+
+.code-section h2 {
+  margin-top: 0;
+  font-size: 16px;
+}
+
+.code-viewer {
+  background: #020617;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.code-header {
+  padding: 10px 14px;
+  background: #1e293b;
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+}
+
+.code-header span {
+  color: #94a3b8;
+}
+
+.code-viewer pre {
+  margin: 0;
+  padding: 16px;
+  overflow: auto;
+  max-height: 400px;
+  font-family: Consolas, Monaco, monospace;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.code-viewer-empty {
+  padding: 25px;
+  background: #1e293b;
+  border-radius: 6px;
+  color: #94a3b8;
+}
+
+.search-results {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.search-result {
+  text-align: left;
+  padding: 8px;
+  border: 1px solid #e5e7eb;
+  background: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.search-result:hover {
+  background: #f3f4f6;
+}
+
+.search-result strong,
+.search-result span,
+.search-result small {
+  display: block;
+}
+
+.search-result strong {
+  font-size: 12px;
+}
+
+.search-result span {
+  margin-top: 3px;
+  font-size: 11px;
+  color: #4b5563;
+}
+
+.search-result small {
+  margin-top: 3px;
+  font-size: 10px;
+  color: #6b7280;
+}
+.architecture-graph {
+  width: 100%;
+  height: 75vh;
+  border: 1px solid #ddd;
+}
