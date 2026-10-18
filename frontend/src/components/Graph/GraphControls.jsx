@@ -1,74 +1,78 @@
 function GraphControls({
   nodeFilters,
-  setNodeFilters,
   edgeFilters,
-  setEdgeFilters,
+  onNodeFilterChange,
+  onEdgeFilterChange,
 }) {
-  const nodeTypes = ["FILE", "CLASS", "FUNCTION", "METHOD", "EXTERNAL"];
+  const nodeTypes = [
+    ["FILE", "FILE"],
+    ["CLASS", "CLASS"],
+    ["FUNCTION", "FUNCTION"],
+    ["METHOD", "METHOD"],
+    ["EXTERNAL", "EXTERNAL"],
+  ];
 
-  const edgeTypes = ["CONTAINS", "IMPORTS", "CALLS", "INHERITS"];
-
-  function toggleFilter(setter, value) {
-    setter((current) => ({
-      ...current,
-      [value]: !current[value],
-    }));
-  }
+  const edgeTypes = [
+    ["CONTAINS", "CONTAINS"],
+    ["IMPORTS", "IMPORTS"],
+    ["CALLS", "CALLS"],
+    ["INHERITS", "INHERITS"],
+  ];
 
   return (
     <div
       style={{
-        padding: "12px",
-        borderBottom: "1px solid #e5e7eb",
+        padding: "15px",
+        borderBottom: "1px solid #ddd",
         background: "#ffffff",
       }}
     >
-      <div style={{ marginBottom: "10px" }}>
-        <strong>Node Filters</strong>
+      <h3>Node Filters</h3>
 
-        <div
-          style={{
-            display: "flex",
-            gap: "8px",
-            flexWrap: "wrap",
-            marginTop: "8px",
-          }}
-        >
-          {nodeTypes.map((type) => (
-            <label key={type} style={{ fontSize: "13px" }}>
-              <input
-                type="checkbox"
-                checked={nodeFilters[type]}
-                onChange={() => toggleFilter(setNodeFilters, type)}
-              />{" "}
-              {type}
-            </label>
-          ))}
-        </div>
+      <div
+        style={{
+          display: "flex",
+          gap: "15px",
+          flexWrap: "wrap",
+        }}
+      >
+        {nodeTypes.map(([type, label]) => (
+          <label key={type}>
+            <input
+              type="checkbox"
+              checked={nodeFilters[type]}
+              onChange={() => onNodeFilterChange(type)}
+            />
+
+            {" "}
+
+            {label}
+          </label>
+        ))}
       </div>
 
-      <div>
-        <strong>Relationship Filters</strong>
+      <h3>Relationship Filters</h3>
 
-        <div
-          style={{
-            display: "flex",
-            gap: "8px",
-            flexWrap: "wrap",
-            marginTop: "8px",
-          }}
-        >
-          {edgeTypes.map((type) => (
-            <label key={type} style={{ fontSize: "13px" }}>
-              <input
-                type="checkbox"
-                checked={edgeFilters[type]}
-                onChange={() => toggleFilter(setEdgeFilters, type)}
-              />{" "}
-              {type}
-            </label>
-          ))}
-        </div>
+      <div
+        style={{
+          display: "flex",
+          gap: "15px",
+          flexWrap: "wrap",
+        }}
+      >
+        {edgeTypes.map(([type, label]) => (
+          <label key={type}>
+            <input
+              type="checkbox"
+              checked={edgeFilters[type]}
+              onChange={() => onEdgeFilterChange(type)}
+            />
+
+            {" "}
+
+            {label}
+          </label>
+        ))}
       </div>
     </div>
   );
